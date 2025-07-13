@@ -6,9 +6,10 @@ Format of the json must be: { "USER_ID": [{"task": "TASK_TITLE", "completed": TA
                                            {"task": "TASK_TITLE", "completed": TASK_COMPLETED_STATUS, "username": "USERNAME"}, 
                                            ... ]}
 """
+import json
 import requests
 import sys
-import json
+
 
 def main():
     if len(sys.argv) != 2:
