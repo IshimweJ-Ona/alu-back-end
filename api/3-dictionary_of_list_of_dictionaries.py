@@ -10,37 +10,56 @@ format musrt be:{ "USER_ID": [ {"username": "USERNAME", "task": "TASK_TITLE", "c
                 ... ]}
 File name must be: todo_all_employees.json
 """
-import json
 import requests
+import json
 import sys
 
-def main():
-    if len(sys.argv) != 1:
-        print("Usage: {} <no arguments required>".format(sys.argv[0]))
+def export_all_employees_todo_to_json():
+    base_url = "https://jsonplaceholder.typicode.com"
+
+    #fetch all users
+    try:
+        users_response = requests.get("{}/users".format(base_url))
+        users_response.raise_for_status()
+        users = users_response.json()
+    except Exception as e:
+        print("Error fetching users:", e)
         return
-    # Fetch all users
-    users_response = requests.get("https://jsonplaceholder.typicode.com/users")
-    users = users_response.json()
-    # Fetch all todos
-    todos_response = requests.get("https://jsonplaceholder.typicode.com/todos")
-    todos = todos_response.json()
-    # Prepare data for JSON export
-    all_tasks_data = {}
-    for user in users:
-        user_id = user.get("id")
-        username = user.get("username", "Unknown")
-        tasks_data = [
-            {
-                "username": username,
-                "task": task.get("title"),
-                "completed": task.get("completed")
-            } for task in todos if task.get("userId") == user_id
-        ]
-        all_tasks_data[user_id] = tasks_data
-    # Write to JSON file
+    
+    #fetch all todos
+    try:
+        todos_response = requests.get("{}/todos".format(base_url))
+        todos_response.raise_for_status()
+        todos = todos_response.json()
+    except Exception as e:
+        print("Error fetching todos:", e)
+        return
+    
+    #dictionary 
+    user_dict = {user.get("id"): user.get("username") for user in users}
+
+    #json structure
+    data = {}
+    for task in todos:
+        user_id = task.get("userId")
+        if user_id not in data:
+            data[user_id] = []
+
+        data[user_id].append({
+            "username": user_dict.get(user_id),
+            "task": task.get("title"),
+            "completed": task.get("completed")
+        })
+
+    # export to jsonfile
     filename = "todo_all_employees.json"
-    with open(filename, 'w', encoding='utf-8') as jsonfile:
-        json.dump(all_tasks_data, jsonfile, indent=4)
+    try:
+        with open(filename, "w", encoding="utf-8") as json_file:
+            json.dump(data, json_file)
+        print("Data exported to {}".format(filename))
+    except Exception as e:
+        print("Error writing JSON file:", e)
+
 
 if __name__ == "__main__":
-    main()
+    export_all_employees_todo_to_json()
