@@ -1,65 +1,49 @@
 #!/usr/bin/python3
 """
-we are to extract data from an rest api and display the data in a json dictionary format
-Records all tasks from all employees
-format musrt be:{ "USER_ID": [ {"username": "USERNAME", "task": "TASK_TITLE", "completed": TASK_COMPLETED_STATUS},
-                             {"username": "USERNAME", "task": "TASK_TITLE", "completed": TASK_COMPLETED_STATUS}, 
-                             ... ], 
-                   "USER_ID": [ {"username": "USERNAME", "task": "TASK_TITLE", "completed": TASK_COMPLETED_STATUS}, 
-                                {"username": "USERNAME", "task": "TASK_TITLE", "completed": TASK_COMPLETED_STATUS}, 
-                ... ]}
-File name must be: todo_all_employees.json
+Module that fetches all employees' TODO lists and exports them to JSON.
+Uses the JSONPlaceholder REST API: https://jsonplaceholder.typicode.com
 """
-import requests
-import json
-import sys
 
-def export_all_employees_todo_to_json():
+import json
+import requests
+
+
+def export_all_employees_to_json():
+    """Fetch and export all employees' TODO tasks to a single JSON file."""
     base_url = "https://jsonplaceholder.typicode.com"
 
-    #fetch all users
-    try:
-        users_response = requests.get("{}/users".format(base_url))
-        users_response.raise_for_status()
-        users = users_response.json()
-    except Exception as e:
-        print("Error fetching users:", e)
-        return
-    
-    #fetch all todos
-    try:
-        todos_response = requests.get("{}/todos".format(base_url))
-        todos_response.raise_for_status()
-        todos = todos_response.json()
-    except Exception as e:
-        print("Error fetching todos:", e)
-        return
-    
-    #dictionary 
-    user_dict = {user.get("id"): user.get("username") for user in users}
+    # Fetch all users
+    users_response = requests.get("{}/users".format(base_url))
+    users = users_response.json()
 
-    #json structure
-    data = {}
-    for task in todos:
-        user_id = task.get("userId")
-        if user_id not in data:
-            data[user_id] = []
+    # Fetch all todos
+    todos_response = requests.get("{}/todos".format(base_url))
+    todos = todos_response.json()
 
-        data[user_id].append({
-            "username": user_dict.get(user_id),
+    # Dictionary to store all users' data
+    all_data = {}
+
+    for user in users:
+        user_id = user.get("id")
+        username = user.get("username")
+
+        # Filter tasks for this user
+        user_tasks = [task for task in todos if task.get("userId") == user_id]
+
+        # Store tasks in the required format
+        all_data[user_id] = [{
+            "username": username,
             "task": task.get("title"),
             "completed": task.get("completed")
-        })
+        } for task in user_tasks]
 
-    # export to jsonfile
+    # Write all data to a single JSON file
     filename = "todo_all_employees.json"
-    try:
-        with open(filename, "w", encoding="utf-8") as json_file:
-            json.dump(data, json_file)
-        print("Data exported to {}".format(filename))
-    except Exception as e:
-        print("Error writing JSON file:", e)
+    with open(filename, mode="w", encoding="utf-8") as json_file:
+        json.dump(all_data, json_file)
+
+    print("Data exported to {}".format(filename))
 
 
 if __name__ == "__main__":
-    export_all_employees_todo_to_json()
+    export_all_employees_to_json()
