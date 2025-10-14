@@ -14,26 +14,22 @@ def export_employee_todo_to_json(employee_id):
     base_url = "https://jsonplaceholder.typicode.com"
 
     # Fetch user information
-    try:
-        user_response = requests.get("{}/users/{}".format(base_url, employee_id))
-        user_response.raise_for_status()
-        user_data = user_response.json()
-    except Exception as e:
-        print("Error fetching user:", e)
-        return
+    user_url = "{}/users/{}".format(base_url, employee_id)
+    user_response = requests.get(user_url)
+    user_data = user_response.json()
 
-    if not user_data or not user_data.get("username"):
+    if not user_data.get("username"):
         print("Employee not found.")
         return
 
     username = user_data.get("username")
 
-    # Fetch all TODO tasks for the employee
-    todos_response = requests.get("{}/todos".format(base_url),
-                                  params={"userId": employee_id})
+    # Fetch employee's TODO tasks
+    todos_url = "{}/todos".format(base_url)
+    todos_response = requests.get(todos_url, params={"userId": employee_id})
     todos = todos_response.json()
 
-    #JSON sturcture
+    # Build JSON data structure
     tasks_list = []
     for task in todos:
         tasks_list.append({
@@ -44,23 +40,22 @@ def export_employee_todo_to_json(employee_id):
 
     data = {str(employee_id): tasks_list}
 
-    #Write Json file
+    # File name format: USER_ID.json
     filename = "{}.json".format(employee_id)
-    try:
-        with open(filename, mode='w', encoding="utf-8") as json_file:
-            json.dump(data, json_file)
-        print("Data exported to {}".format(filename))
-    except Exception as e:
-        print("Error writing JSON file:", e)
+
+    # Write JSON file
+    with open(filename, mode="w", encoding="utf-8") as json_file:
+        json.dump(data, json_file)
+
+    print("Data exported to {}".format(filename))
 
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("USage: {} <employee_id>".format(sys.argv[0]))
+        print("Usage: {} <employee_id>".format(sys.argv[0]))
     else:
         try:
             emp_id = int(sys.argv[1])
             export_employee_todo_to_json(emp_id)
         except ValueError:
-            print("Employee Id must be an integer.")
-            
+            print("Employee ID must be an integer.")
