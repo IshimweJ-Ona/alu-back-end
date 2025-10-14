@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 """
 Module that fetches all employees' TODO lists and exports them to JSON.
-Uses the JSONPlaceholder REST API: https://jsonplaceholder.typicode.com
+
+Uses the JSONPlaceholder REST API:
+https://jsonplaceholder.typicode.com
 """
 
 import json
@@ -9,7 +11,9 @@ import requests
 
 
 def export_all_employees_to_json():
-    """Fetch and export all employees' TODO tasks to a single JSON file."""
+    """
+    Fetch and export all employees' TODO tasks to a single JSON file.
+    """
     base_url = "https://jsonplaceholder.typicode.com"
 
     # Fetch all users
@@ -31,18 +35,19 @@ def export_all_employees_to_json():
         user_tasks = [task for task in todos if task.get("userId") == user_id]
 
         # Store tasks in the required format
-        all_data[user_id] = [{
-            "username": username,
-            "task": task.get("title"),
-            "completed": task.get("completed")
-        } for task in user_tasks]
+        all_data[str(user_id)] = [
+            {
+                "username": username,
+                "task": task.get("title"),
+                "completed": task.get("completed")
+            }
+            for task in user_tasks
+        ]
 
     # Write all data to a single JSON file
     filename = "todo_all_employees.json"
     with open(filename, mode="w", encoding="utf-8") as json_file:
         json.dump(all_data, json_file)
-
-    print("Data exported to {}".format(filename))
 
 
 if __name__ == "__main__":
